@@ -183,6 +183,7 @@
     transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000);
     z-index: 10;
     pointer-events: none;
+    display: none;
   }
   #flip-container.flipping { pointer-events: none; }
 
@@ -758,6 +759,7 @@ function openBook() {
     cover.classList.remove('opening');
     cover.classList.add('opened');
     cover.style.display = 'none';
+    flipContainer.style.display = 'block';
     isOpen = true;
     isAnimating = false;
     renderSpread(0);
@@ -776,15 +778,22 @@ function doFlip(direction) {
   isAnimating = true;
   flipContainer.style.transition = 'transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000)';
 
+  const HALF = 450; // midpoint of 900ms animation — page is edge-on, neither face visible
+
   if (direction === 'next') {
-    // prepare back face with next spread's left page
-    flipBack.innerHTML = (currentSpread + 1 < TOTAL_SPREADS)
+    const nextLeft = (currentSpread + 1 < TOTAL_SPREADS)
       ? spreads[currentSpread + 1].left
       : `<div class="page-content"><div style="display:flex;align-items:center;justify-content:center;height:100%;">
           <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold-dark);">Fin</div>
         </div></div>`;
 
+    flipBack.innerHTML = nextLeft;
     flipContainer.style.transform = 'rotateY(-180deg)';
+
+    // Swap left-page content at midpoint when page is edge-on (invisible) — no overlap
+    setTimeout(() => {
+      leftContent.innerHTML = nextLeft;
+    }, HALF);
 
     setTimeout(() => {
       currentSpread++;
@@ -795,10 +804,18 @@ function doFlip(direction) {
     }, 920);
 
   } else {
-    leftContent.innerHTML = spreads[currentSpread - 1].left;
-    flipBack.innerHTML    = spreads[currentSpread - 1].right;
-    document.getElementById('pages-stack-content').innerHTML = spreads[currentSpread - 1].right;
+    const prevLeft  = spreads[currentSpread - 1].left;
+    const prevRight = spreads[currentSpread - 1].right;
+
+    flipBack.innerHTML = prevRight;
+    document.getElementById('pages-stack-content').innerHTML = prevRight;
     flipContainer.style.transform = 'rotateY(180deg)';
+
+    // Swap left-page content at midpoint when page is edge-on — no overlap
+    setTimeout(() => {
+      leftContent.innerHTML = prevLeft;
+    }, HALF);
+
     setTimeout(() => {
       currentSpread--;
       flipContainer.style.transition = 'none';
