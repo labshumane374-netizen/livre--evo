@@ -183,6 +183,7 @@
     transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000);
     z-index: 10;
     pointer-events: none;
+    display: none;
   }
   #flip-container.flipping { pointer-events: none; }
 
@@ -750,14 +751,15 @@ function updateIndicator() {
 function openBook() {
   if (isOpen || isAnimating) return;
   isAnimating = true;
-  document.getElementById('left-page').style.display   = 'block';
-  document.getElementById('pages-stack').style.display = 'block';
   cover.classList.add('opening');
   cover.querySelector('.cover-click-hint').style.display = 'none';
   setTimeout(() => {
     cover.classList.remove('opening');
     cover.classList.add('opened');
     cover.style.display = 'none';
+    document.getElementById('left-page').style.display   = 'block';
+    document.getElementById('pages-stack').style.display = 'block';
+    flipContainer.style.display = 'block';
     isOpen = true;
     isAnimating = false;
     renderSpread(0);
@@ -784,7 +786,13 @@ function doFlip(direction) {
           <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold-dark);">Fin</div>
         </div></div>`;
 
+    document.getElementById('pages-stack-content').innerHTML = '';
     flipContainer.style.transform = 'rotateY(-180deg)';
+
+    setTimeout(() => {
+      document.getElementById('pages-stack-content').innerHTML =
+        (currentSpread + 1 < TOTAL_SPREADS) ? spreads[currentSpread + 1].right : '';
+    }, 460);
 
     setTimeout(() => {
       currentSpread++;
