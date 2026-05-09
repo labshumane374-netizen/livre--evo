@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les Origines Cachées – Collectif Vérité</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9973a;
+    --gold-light: #f0c060;
+    --gold-dark: #8a6020;
+    --paper: #f2e8d0;
+    --paper-dark: #e0d0b0;
+    --paper-shadow: #b8a070;
+    --ink: #1a1208;
+    --red-accent: #8b1a1a;
+    --spine: #2a1800;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: transparent;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IM Fell English', serif;
+  }
+
+  /* ── SCENE ── */
+  #scene {
+    perspective: 2000px;
+    width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  /* ── BOOK WRAPPER ── */
+  #book-wrapper {
+    position: relative;
+    width: 700px; height: 500px;
+    transform-style: preserve-3d;
+  }
+
+  /* ── COVER (closed state) ── */
+  #cover-container {
+    position: absolute;
+    width: 350px; height: 500px;
+    left: 50%; transform: translateX(-50%);
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    z-index: 100;
+    cursor: pointer;
+    transition: filter 0.3s;
+  }
+  #cover-container:hover { filter: brightness(1.08); }
+
+  .cover-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    border-radius: 2px 8px 8px 2px;
+    overflow: hidden;
+  }
+  .cover-front {
+    background: linear-gradient(160deg, #1a0d00 0%, #2e1a00 40%, #1a0d00 100%);
+    border: 3px solid var(--gold-dark);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.8), inset -4px 0 12px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    padding: 18px 16px;
+    overflow: hidden;
+  }
+  .cover-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(180deg, #1a0d00, #2a1500);
+    border: 3px solid var(--gold-dark);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* cover image fills the whole front */
+  .cover-img-fill {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+  }
+  .cover-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(0,0,0,0.15) 0%,
+      rgba(0,0,0,0.05) 40%,
+      rgba(0,0,0,0.4) 100%);
+  }
+  .cover-text-block {
+    position: relative; z-index: 2;
+    text-align: center; width: 100%;
+  }
+  .cover-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 28px; font-weight: 900;
+    color: var(--gold-light);
+    text-shadow: 0 0 20px rgba(201,151,58,0.9), 0 2px 4px rgba(0,0,0,0.9);
+    line-height: 1.1; letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .cover-sub {
+    font-family: 'Cinzel', serif;
+    font-size: 9px; font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+  .cover-bottom {
+    position: absolute; bottom: 14px; left: 0; right: 0;
+    text-align: center; z-index: 2;
+    font-family: 'Cinzel', serif; font-size: 8px;
+    color: var(--gold-dark); letter-spacing: 2px;
+  }
+  .cover-click-hint {
+    position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%);
+    font-family: 'Cinzel', serif; font-size: 11px;
+    color: var(--gold); letter-spacing: 2px;
+    animation: pulse-hint 2s ease-in-out infinite;
+    white-space: nowrap;
+  }
+  @keyframes pulse-hint {
+    0%,100%{ opacity:0.4; } 50%{ opacity:1; }
+  }
+
+  /* cover spine illusion */
+  .cover-spine {
+    position: absolute;
+    left: -14px; top: 0; width: 14px; height: 500px;
+    background: linear-gradient(90deg, #0d0600, #2a1800, #1a1000);
+    border-left: 2px solid #0d0600;
+    border-right: 1px solid var(--gold-dark);
+    transform: rotateY(-90deg) translateX(-7px);
+    transform-origin: right center;
+  }
+
+  /* ── PAGES STACK (right side, always visible) ── */
+  #pages-stack {
+    position: absolute;
+    left: 50%; top: 0;
+    width: 350px; height: 500px;
+    background: linear-gradient(90deg, #e8d8b0, #f2e8d0 10%, #ede0c0 90%, #d8c898);
+    border-radius: 0 6px 6px 0;
+    box-shadow: 6px 4px 20px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+  /* edge lines illusion */
+  #pages-stack::before {
+    content:'';
+    position: absolute; left: 0; top: 2px; bottom: 2px; width: 12px;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
+    );
+  }
+
+  /* ── LEFT PAGE (even pages) ── */
+  #left-page {
+    position: absolute;
+    left: 0; top: 0;
+    width: 350px; height: 500px;
+    background: var(--paper);
+    border-right: 1px solid #c8b880;
+    overflow: hidden;
+    box-shadow: inset -6px 0 12px rgba(0,0,0,0.07);
+  }
+
+  /* ── FLIP CONTAINER (the actual turning page) ── */
+  #flip-container {
+    position: absolute;
+    left: 50%; top: 0;
+    width: 350px; height: 500px;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+    z-index: 10;
+    pointer-events: none;
+  }
+  #flip-container.flipping { pointer-events: none; }
+
+  .flip-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    overflow: hidden;
+  }
+  #flip-front {
+    background: var(--paper);
+    box-shadow: inset -4px 0 12px rgba(0,0,0,0.1);
+  }
+  #flip-back {
+    background: var(--paper);
+    transform: rotateY(180deg);
+    box-shadow: inset 4px 0 12px rgba(0,0,0,0.1);
+  }
+
+  /* ── PAGE CONTENT ── */
+  .page-content {
+    width: 100%; height: 100%;
+    padding: 30px 28px 24px;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .page-number {
+    position: absolute; bottom: 14px;
+    font-family: 'Cinzel', serif; font-size: 11px;
+    color: var(--gold-dark); letter-spacing: 1px;
+  }
+  .page-number.left { left: 28px; }
+  .page-number.right { right: 28px; }
+
+  .page-chapter {
+    font-family: 'Cinzel', serif; font-size: 9px;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--red-accent);
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--gold-dark);
+    padding-bottom: 6px;
+  }
+  .page-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 15px; font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 14px; line-height: 1.3;
+    text-align: center;
+  }
+  .page-body {
+    font-family: 'IM Fell English', serif;
+    font-size: 11px; line-height: 1.6;
+    color: #2a1e0a;
+    text-align: justify;
+    flex: 1;
+    overflow: hidden;
+  }
+  .page-body p { margin-bottom: 8px; }
+  .page-body .dropcap {
+    float: left; font-family: 'Cinzel Decorative', serif;
+    font-size: 42px; line-height: 0.8;
+    color: var(--red-accent);
+    margin: 4px 6px 0 0;
+    text-shadow: 1px 1px 0 var(--gold-dark);
+  }
+  .divider {
+    text-align: center; color: var(--gold);
+    font-size: 16px; margin: 10px 0;
+    letter-spacing: 8px;
+  }
+  .quote-block {
+    border-left: 3px solid var(--gold-dark);
+    padding: 8px 12px;
+    margin: 10px 0;
+    background: rgba(201,151,58,0.06);
+    font-style: italic;
+    font-size: 12px; color: #4a3010;
+  }
+  .stamp {
+    border: 2px solid var(--red-accent);
+    color: var(--red-accent);
+    font-family: 'Cinzel', serif;
+    font-size: 9px; letter-spacing: 2px;
+    padding: 3px 8px;
+    display: inline-block;
+    transform: rotate(-4deg);
+    margin: 6px 0;
+    opacity: 0.8;
+  }
+  .ornament {
+    text-align: center; font-size: 20px;
+    color: var(--gold); margin: 8px 0;
+    letter-spacing: 4px;
+  }
+  .illustration-box {
+    border: 2px solid var(--gold-dark);
+    padding: 6px; margin: 10px auto;
+    background: rgba(201,151,58,0.08);
+    text-align: center; max-width: 220px;
+  }
+  .illustration-box .caption {
+    font-size: 9px; color: var(--gold-dark);
+    font-family: 'Cinzel', serif; letter-spacing: 1px;
+    margin-top: 4px; font-style: italic;
+  }
+  .illustration-box .art {
+    font-size: 48px; line-height: 1.2;
+  }
+
+  /* ── NAVIGATION BUTTONS ── */
+  #nav-prev, #nav-next {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(201,151,58,0.15);
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    width: 36px; height: 60px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+    z-index: 200;
+    font-family: serif;
+    user-select: none;
+  }
+  #nav-prev { left: -52px; border-radius: 6px 0 0 6px; }
+  #nav-next { right: -52px; border-radius: 0 6px 6px 0; }
+  #nav-prev:hover, #nav-next:hover {
+    background: rgba(201,151,58,0.35);
+    box-shadow: 0 0 12px rgba(201,151,58,0.4);
+  }
+  #nav-prev.hidden, #nav-next.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── PAGE INDICATOR ── */
+  #page-indicator {
+    position: absolute; bottom: -44px; left: 50%; transform: translateX(-50%);
+    font-family: 'Cinzel', serif; font-size: 11px;
+    color: var(--gold); letter-spacing: 2px;
+    white-space: nowrap;
+  }
+
+  /* ── COVER OPEN ANIMATION ── */
+  #cover-container.opening {
+    animation: cover-open 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+  }
+  @keyframes cover-open {
+    0%   { transform: translateX(-50%) rotateY(0deg); }
+    100% { transform: translateX(-50%) rotateY(-160deg); }
+  }
+  #cover-container.opened {
+    transform: translateX(-50%) rotateY(-160deg);
+    pointer-events: none;
+  }
+
+  /* curl shadow effect on flip */
+  #flip-container::after {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 40px; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.12));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  /* page texture */
+  .page-content::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+<div id="scene">
+  <div id="book-wrapper">
+
+    <!-- LEFT PAGE (back content) -->
+    <div id="left-page">
+      <div class="page-content" id="left-content">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- PAGES STACK (right side visual) -->
+    <div id="pages-stack"></div>
+
+    <!-- FLIP CONTAINER -->
+    <div id="flip-container">
+      <div class="flip-face" id="flip-front">
+        <div class="page-content" id="flip-front-content"></div>
+      </div>
+      <div class="flip-face" id="flip-back">
+        <div class="page-content" id="flip-back-content"></div>
+      </div>
+    </div>
+
+    <!-- COVER -->
+    <div id="cover-container">
+      <div class="cover-face cover-front">
+        <!-- Full cover artwork reproduced in CSS/HTML -->
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%, #3d2200 0%, #1a0d00 70%);"></div>
+        <!-- pyramid glow -->
+        <div style="position:absolute;bottom:120px;left:50%;transform:translateX(-50%);width:180px;height:160px;background:radial-gradient(ellipse at 50% 100%, rgba(255,180,50,0.55) 0%, transparent 70%);"></div>
+        <!-- DNA right -->
+        <div style="position:absolute;right:10px;top:60px;bottom:40px;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0.5;">
+          <div style="font-size:11px;color:var(--gold);writing-mode:vertical-lr;letter-spacing:4px;font-family:'Cinzel',serif;">⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡⬢⬡</div>
+        </div>
+        <!-- decorative corners -->
+        <div style="position:absolute;top:6px;left:6px;width:24px;height:24px;border-top:2px solid var(--gold-dark);border-left:2px solid var(--gold-dark);"></div>
+        <div style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-top:2px solid var(--gold-dark);border-right:2px solid var(--gold-dark);"></div>
+        <div style="position:absolute;bottom:6px;left:6px;width:24px;height:24px;border-bottom:2px solid var(--gold-dark);border-left:2px solid var(--gold-dark);"></div>
+        <div style="position:absolute;bottom:6px;right:6px;width:24px;height:24px;border-bottom:2px solid var(--gold-dark);border-right:2px solid var(--gold-dark);"></div>
+        <!-- title block -->
+        <div class="cover-text-block" style="position:absolute;top:22px;left:10px;right:10px;">
+          <div class="cover-title">LES ORIGINES<br>CACHÉES</div>
+          <div style="height:1px;background:linear-gradient(90deg,transparent,var(--gold-dark),transparent);margin:6px 0;"></div>
+          <div class="cover-sub">La Vérité sur l'Évolution Humaine</div>
+          <div style="font-family:'Cinzel',serif;font-size:7.5px;color:#7a5828;letter-spacing:1.5px;margin-top:4px;">CE QUE LES INSTITUTIONS NE VEULENT PAS QUE VOUS SACHIEZ</div>
+        </div>
+        <div class="cover-bottom">COLLECTIF VÉRITÉ &nbsp;•&nbsp; LOS SANTOS</div>
+      </div>
+      <div class="cover-face cover-back">
+        <div style="color:var(--gold-dark);font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;text-align:center;padding:20px;">
+          <div style="font-size:20px;margin-bottom:10px;">✦</div>
+          COLLECTIF VÉRITÉ<br>
+          <div style="font-size:9px;margin-top:8px;color:#5a3810;">LOS SANTOS · SAN ANDREAS</div>
+        </div>
+      </div>
+      <div class="cover-spine"></div>
+      <div class="cover-click-hint">▶ Cliquez pour ouvrir</div>
+    </div>
+
+    <!-- NAV BUTTONS -->
+    <button id="nav-prev" class="hidden" onclick="flipPrev()">◀</button>
+    <button id="nav-next" class="hidden" onclick="flipNext()">▶</button>
+
+    <!-- INDICATOR -->
+    <div id="page-indicator" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  BOOK CONTENT — 10 spreads (20 pages)
+//  Each spread = { left: HTML, right: HTML }
+// ═══════════════════════════════════════════
+const spreads = [
+  // SPREAD 0 — intro / table des matières
+  {
+    left: `<div class="page-chapter">Préface</div>
+<div class="page-title">Avant-propos<br>de l'Auteur</div>
+<div class="page-body">
+<p><span class="dropcap">C</span>e que vous tenez entre les mains n'est pas un ouvrage scientifique. C'est le récit d'une vie passée à chercher, à douter et à observer — loin des circuits universitaires et des vérités toutes faites.</p>
+<p>J'ai consacré vingt ans à ces questions. Ce livre en est la somme, imparfaite et sincère.</p>
+<div class="divider">✦ ✦ ✦</div>
+<p>Je ne prétends pas détenir la vérité. Je prétends qu'elle mérite d'être cherchée, et que certaines pistes restent inexpliquées à ce jour.</p>
+<p>C'est à vous d'en juger.</p>
+</div>
+<div class="page-number left">II</div>`,
+
+    right: `<div class="page-chapter">Sommaire</div>
+<div class="page-title">Table des Matières</div>
+<div class="page-body" style="font-family:'Cinzel',serif;font-size:11px;">
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+  ${[
+    ['I', 'Les Annunakis de Zancudo', '1'],
+    ['II', 'L\'ADN Modifié de l\'Homo Sanctus', '15'],
+    ['III', 'Les Pyramides de Chumash', '27'],
+    ['IV', 'Le Projet MK-Vinewood', '41'],
+    ['V', 'Les Garants du Mensonge', '55'],
+    ['VI', 'Les Tablettes de Fort Zancudo', '69'],
+    ['VII', 'Témoignages Classifiés', '83'],
+    ['VIII', 'La Connexion Extraterrestre', '95'],
+    ['IX', 'Ce que Vous Devez Faire', '107'],
+  ].map(([num,title,page])=>`
+  <div style="display:flex;align-items:baseline;gap:4px;">
+    <span style="color:var(--red-accent);min-width:14px;">${num}.</span>
+    <span style="flex:1;border-bottom:1px dotted #c8a860;">${title}</span>
+    <span style="color:var(--gold-dark);min-width:20px;text-align:right;">${page}</span>
+  </div>`).join('')}
+</div>
+</div>
+<div class="page-number right">III</div>`
+  },
+
+  // SPREAD 1
+  {
+    left: `<div class="page-chapter">Chapitre I</div>
+<div class="page-title">Les Annunakis de Zancudo</div>
+<div class="page-body">
+<p><span class="dropcap">I</span>l y a 450 000 ans, selon les tablettes sumériennes retrouvées sous Fort Zancudo en 2019 par le chercheur indépendant Dr. Ezekiel Morales — rapidement "disparu" deux semaines après leur découverte — une race extraterrestre posait pied sur ce qui est aujourd'hui San Andreas.</p>
+<div class="quote-block">"Ils vinrent non pas des étoiles visibles, mais d'entre les étoiles. Leur peau reflétait l'or comme reflète le Pacifique au coucher du soleil."<br><span style="font-style:normal;font-size:10px;color:var(--gold-dark);">— Tablette Z-07, traduction Morales, 2019</span></div>
+<p>Ces êtres, que les Sumériens appelaient <em>Annunaki</em>, n'étaient pas venus pour conquérir. Ils étaient venus pour extraire. L'or de la Vinewood Hills. Le lithium sous les Alamos Sea. Et surtout... le potentiel génétique d'une espèce primitive qui errait dans le Blaine County.</p>
+</div>
+<div class="page-number left">2</div>`,
+
+    right: `<div class="page-chapter">Chapitre I</div>
+<div class="page-body">
+<p>Nous sommes peut-être le produit de cette intervention. Une espèce indigène — l'<em>Homo Zancudus</em> — aurait été modifiée, optimisée pour une tâche précise. C'est du moins ce que suggèrent les indices que j'ai réunis.</p>
+<div class="illustration-box">
+  <div style="font-family:monospace;font-size:10px;color:var(--gold-dark);line-height:1.7;letter-spacing:1px;">A·T·G·C·A·T<br>| | | | | |<br>T·A·C·G·T·A</div>
+  <div style="font-size:11px;font-family:'Cinzel',serif;color:var(--ink);margin-top:4px;">HOMO ZANCUDUS → HOMO SAPIENS</div>
+  <div class="caption">Schéma de manipulation génétique, source: archives privées Collectif Vérité</div>
+</div>
+<p>L'évolution darwinienne peut-elle expliquer le saut cognitif brutal survenu il y a 200 000 ans ? La sélection naturelle ne procède pas par sauts. Cette question reste, à mes yeux, sans réponse satisfaisante.</p>
+</div>
+<div class="page-number right">3</div>`
+  },
+
+  // SPREAD 2
+  {
+    left: `<div class="page-chapter">Chapitre II</div>
+<div class="page-title">L'ADN Modifié<br>de l'Homo Sanctus</div>
+<div class="page-body">
+<p><span class="dropcap">L</span>e génome humain contient 223 gènes sans aucun précédent évolutif. Deux cent vingt-trois gènes qui ne viennent de nulle part. Deux cent vingt-trois gènes que la science officielle classe discrètement dans la catégorie des "gènes à transfert horizontal" — une façon polie de dire : <em>nous ne savons pas d'où ils viennent.</em></p>
+<p>Le Pr. Alejandro Vasquez, de l'Université de Los Santos avant son licenciement en 2021, a publié pendant 72 heures une étude montrant que 19 de ces gènes portent une structure en double hélice inversée — impossible dans la nature terrestre.</p>
+<div class="quote-block">"Quelqu'un a signé notre ADN. Comme un artiste signe sa toile. Et cette signature n'est pas terrestre."<br><span style="font-style:normal;font-size:10px;color:var(--gold-dark);">— Pr. Vasquez, conférence retirée, LS Bio-Institute, 2021</span></div>
+</div>
+<div class="page-number left">16</div>`,
+
+    right: `<div class="page-chapter">Chapitre II</div>
+<div class="page-body">
+<p>Pourquoi sommes-nous si différents de nos "cousins" primates ? L'ADN humain et celui du chimpanzé partagent 98,7% de similarité — et pourtant, nous construisons des gratte-ciels à Downtown Los Santos tandis qu'eux ramassent des insectes dans Vinewood Hills.</p>
+<p>Ce 1,3% de différence représente des milliers de gènes. Il ne s'est pas constitué en quelques millions d'années d'évolution. Il a été injecté.</p>
+<div class="illustration-box">
+  <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--ink);letter-spacing:2px;line-height:2.2;">HOMO ZANCUDUS<br>↓<br>HOMO SAPIENS</div>
+  <div class="caption">Le "chaînon manquant" est une manipulation, pas une évolution</div>
+</div>
+<p>J'ai retrouvé dans plusieurs archives indépendantes des documents laissant entendre que certaines institutions connaissent ces anomalies génétiques depuis des décennies, sans jamais les rendre publiques.</p>
+</div>
+<div class="page-number right">17</div>`
+  },
+
+  // SPREAD 3
+  {
+    left: `<div class="page-chapter">Chapitre III</div>
+<div class="page-title">Les Pyramides<br>de Chumash</div>
+<div class="page-body">
+<p><span class="dropcap">À</span> 47 mètres sous le sable de la plage de Chumash, des plongeurs du Collectif ont filmé en 2022 ce que les autorités refusent d'appeler ce que c'est : une pyramide à degrés, parfaitement alignée sur le solstice d'été de l'an 48 000 avant J.C.</p>
+<p>La zone a été rapidement bouclée. Les témoins ont préféré se taire. Ce silence lui-même constitue, pour moi, une forme de réponse.</p>
+<div class="ornament">◆ ◇ ◆</div>
+<p>Ces structures sous-marines ne sont pas uniques. Il en existe sept, réparties sur toute la côte de San Andreas, formant un hexagone parfait dont le centre géographique exact est... Fort Zancudo.</p>
+<div class="quote-block">"Coïncidence? Je n'ai jamais vu une coïncidence à six côtés."<br><span style="font-style:normal;font-size:10px;color:var(--gold-dark);">— Commander J. Reyes, ex-US Navy, témoin anonyme #4</span></div>
+</div>
+<div class="page-number left">28</div>`,
+
+    right: `<div class="page-chapter">Chapitre III</div>
+<div class="page-body">
+<p>Ces pyramides servaient de balises de navigation pour les vaisseaux Annunakis lors de leur approche atmosphérique. Chacune émet encore aujourd'hui une fréquence de 7,83 Hz — la fréquence Schumann, la fréquence de résonance de la Terre elle-même.</p>
+<p>Ce n'est pas naturel. C'est une infrastructure. Et quelqu'un la maintient en état de fonctionnement.</p>
+<div class="illustration-box">
+  <div style="position:relative;display:inline-block;">
+    <div style="font-size:40px;">▲</div>
+    <div style="position:absolute;top:-8px;right:-8px;font-size:16px;">▲</div>
+    <div style="position:absolute;bottom:-4px;left:-12px;font-size:16px;">▲</div>
+  </div>
+  <div class="caption">Réseau pyramidal sous-marin — côte de San Andreas</div>
+</div>
+<p>Les autorités préfèrent parler d'"anomalies géologiques naturelles". Mais aucune anomalie naturelle ne génère des ondes électromagnétiques modulées en fréquence binaire. Aucune.</p>
+<p>Nous avons les enregistrements. Nous les avons cachés. Si vous lisez ces lignes, c'est que nous avons survécu assez longtemps pour les publier.</p>
+</div>
+<div class="page-number right">29</div>`
+  },
+
+  // SPREAD 4
+  {
+    left: `<div class="page-chapter">Chapitre IV</div>
+<div class="page-title">Le Projet<br>MK-Vinewood</div>
+<div class="page-body">
+<p><span class="dropcap">E</span>n 1959, sous l'administration Rockford, un programme secret fut lancé dans les studios de Vinewood. Son nom de code : <em>Projet Silence Étoilé</em>. Son objectif déclaré dans les archives déclassifiées que nous avons obtenues via un hacker anonyme : "conditionner la population civile à rejeter instinctivement toute information relative à l'origine non-terrestre de l'espèce humaine".</p>
+<p>Concrètement ? Chaque film de science-fiction depuis 1960 représentant les extraterrestres comme des <em>envahisseurs hostiles</em> a été financé, en partie, par un fonds contrôlé par l'IAA.</p>
+<div class="quote-block">"Si le public croit que les aliens veulent nous tuer, il ne concevra jamais qu'ils nous ont créés."<br><span style="font-style:normal;font-size:10px;">— Note retrouvée, archives privées, date incertaine</span></div>
+</div>
+<div class="page-number left">42</div>`,
+
+    right: `<div class="page-chapter">Chapitre IV</div>
+<div class="page-body">
+<p>Chaque blockbuster de Vinewood. Chaque émission de la chaîne gouvernementale Weazel News. Chaque émission de radio sur WCTR. Tout ça est calibré pour maintenir un état de distraction collective — les guerres de gangs à Grove Street, les rallyes automobiles, les achats compulsifs sur Dynasty 8 — tout ça sert à vous empêcher de lever les yeux vers le ciel et de vous poser la question qui change tout :</p>
+<div class="ornament">✦</div>
+<p style="text-align:center;font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--red-accent);margin:10px 0;">D'où venons-nous vraiment ?</p>
+<div class="ornament">✦</div>
+<p>Les personnalités de Vinewood les plus puissantes — celles dont les manoirs dominent les collines — ont signé un accord de non-divulgation avec les entités qui gèrent Fort Zancudo au niveau -6. Certains d'entre eux ne sont pas entièrement humains. Nous avons les photos.</p>
+</div>
+<div class="page-number right">43</div>`
+  },
+
+  // SPREAD 5
+  {
+    left: `<div class="page-chapter">Chapitre V</div>
+<div class="page-title">Les Garants<br>du Mensonge</div>
+<div class="page-body">
+<p><span class="dropcap">Q</span>ui orchestre ce silence ? Au terme de mes recherches, j'ai identifié cinq structures interdépendantes formant ce que j'appelle <em>l'Anneau de Contrôle</em> :</p>
+<div style="font-family:'Cinzel',serif;font-size:11px;display:flex;flex-direction:column;gap:7px;margin-top:8px;">
+  <div style="border-left:3px solid var(--red-accent);padding-left:8px;"><span style="color:var(--red-accent);">01.</span> L'IAA — bras armé du secret</div>
+  <div style="border-left:3px solid var(--red-accent);padding-left:8px;"><span style="color:var(--red-accent);">02.</span> Merryweather Institute — science aux ordres</div>
+  <div style="border-left:3px solid var(--red-accent);padding-left:8px;"><span style="color:var(--red-accent);">03.</span> Weazel News — distraction de masse</div>
+  <div style="border-left:3px solid var(--red-accent);padding-left:8px;"><span style="color:var(--red-accent);">04.</span> FIB Research Division — effacement des preuves</div>
+  <div style="border-left:3px solid var(--red-accent);padding-left:8px;"><span style="color:var(--red-accent);">05.</span> Maze Bank Foundation — financement occulte</div>
+</div>
+</div>
+<div class="page-number left">56</div>`,
+
+    right: `<div class="page-chapter">Chapitre V</div>
+<div class="page-body">
+<p>Ces cinq entités communiquent via un réseau crypté hébergé non pas sur des serveurs terrestres, mais sur une infrastructure satellitaire dont les coordonnées orbitales ne correspondent à aucun satellite enregistré auprès de l'Agence Spatiale de San Andreas.</p>
+<p>Des chercheurs ont tenté de tracer ces satellites. Plusieurs ont abandonné leurs travaux sans explication. Un seul m'a transmis des données, depuis un pays qu'il a préféré taire.</p>
+<div class="illustration-box">
+  <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-dark);letter-spacing:4px;">◎ · · ·</div>
+  <div class="caption">Satellite non-répertorié, orbite 340km, source: fuite anonyme</div>
+</div>
+<p>La prochaine fois que vous voyez un avion de Merryweather survoler Sandy Shores la nuit, à basse altitude, sans feux de navigation... ce n'est pas un exercice militaire. C'est une collecte de données.</p>
+</div>
+<div class="page-number right">57</div>`
+  },
+
+  // SPREAD 6
+  {
+    left: `<div class="page-chapter">Chapitre VI</div>
+<div class="page-title">Les Tablettes<br>de Fort Zancudo</div>
+<div class="page-body">
+<p><span class="dropcap">L</span>es tablettes sont réelles. Vingt-deux plaques de pierre dont la composition minérale ne correspond à aucune roche identifiée sur Terre. Gravées dans une langue qui n'est ni le sumérien, ni l'akkadien, ni aucune langue humaine connue — mais que le Dr. Morales est parvenu à déchiffrer partiellement grâce à un algorithme de traduction assisté par les patterns récurrents des hiéroglyphes mayas et cunéiformes.</p>
+<div class="quote-block">"Tablette XII, fragment 3 : 'Nous les avons façonnés à notre image incomplète. Nous avons laissé dans leur chair le souvenir de ce qu'ils auraient pu être. Un jour ils se souviendront.'"</div>
+<p>Un jour ils se souviendront. Ce livre est ce souvenir.</p>
+</div>
+<div class="page-number left">70</div>`,
+
+    right: `<div class="page-chapter">Chapitre VI</div>
+<div class="page-body">
+<p>La tablette XVIII est particulièrement troublante. Elle décrit avec une précision chirurgicale l'anatomie du lobe temporal humain — et indique la position exacte de ce que les Annunakis appellent le <em>Sceau du Souvenir</em> : un ensemble de 12 neurones miroirs disposés en formation hexagonale dans l'hippocampe droit.</p>
+<p>Ces neurones, selon la tablette, ont été encodés pour réagir à un stimulus spécifique. Un son. Une fréquence. La même fréquence que celle émise par les pyramides de Chumash.</p>
+<div class="ornament">◈ ◈ ◈</div>
+<p>En 2023, une équipe de neuro-biologistes de l'Université Secrète de Paleto Bay — oui, elle existe, cherchez le bâtiment sans enseigne derrière la scierie — a confirmé l'existence de ces 12 neurones. L'étude a été retirée en 48 heures.</p>
+</div>
+<div class="page-number right">71</div>`
+  },
+
+  // SPREAD 7
+  {
+    left: `<div class="page-chapter">Chapitre VII</div>
+<div class="page-title">Témoignages<br>Recueillis</div>
+<div class="page-body">
+<p><span class="dropcap">C</span>e chapitre rassemble des témoignages recueillis au fil de mes années de recherche. Les noms ont été modifiés à la demande des intéressés. Ce sont des hommes et des femmes ordinaires qui ont accepté de me parler.</p>
+<div class="quote-block">"J'étais technicien au niveau -3 de Fort Zancudo. Je ne peux pas décrire ce que j'ai vu. Mais je peux vous dire que les uniformes des 'hommes' qui travaillent au niveau -5 n'ont pas de badge de nom. Ils n'ont pas de visage lisible. Et quand ils passent, les capteurs biologiques sonnent l'alarme."<br><span style="font-size:10px;font-style:normal;">— Témoin A, ex-contractuel Merryweather</span></div>
+<div class="quote-block">"Mon père travaillait à Weazel. Il m'a dit une nuit, juste avant de mourir : 'Ne regarde jamais les étoiles trop longtemps. Ils peuvent voir que tu regardes.'"<br><span style="font-size:10px;font-style:normal;">— Témoin B, fille d'employé</span></div>
+</div>
+<div class="page-number left">84</div>`,
+
+    right: `<div class="page-chapter">Chapitre VII</div>
+<div class="page-body">
+<div class="quote-block">"J'ai fait une overdose en 2020. Pendant les 11 minutes où j'étais cliniquement mort, j'ai vu quelque chose. Une salle. Des écrans. Des êtres qui regardaient San Andreas comme on regarde un aquarium. L'un d'eux s'est retourné. Il savait que je regardais. Il a souri. Je me suis réveillé."<br><span style="font-size:10px;font-style:normal;">— Témoin C, résident de Sandy Shores</span></div>
+<div class="quote-block">"J'ai travaillé trois ans à la Maze Bank. Niveau direction. Nos actionnaires majoritaires... vous ne les verrez jamais à une assemblée générale. Ils envoient des représentants. Ces représentants ne mangent jamais. Ne boivent jamais. Portent toujours des lunettes. Toujours."<br><span style="font-size:10px;font-style:normal;">— Témoin D, ex-cadre financier</span></div>
+<p>Ces témoignages sont cohérents entre eux. Ces personnes ne se connaissent pas. Et pourtant, tous décrivent la même chose.</p>
+</div>
+<div class="page-number right">85</div>`
+  },
+
+  // SPREAD 8
+  {
+    left: `<div class="page-chapter">Chapitre VIII</div>
+<div class="page-title">La Connexion<br>Extraterrestre</div>
+<div class="page-body">
+<p><span class="dropcap">N</span>ous ne sommes pas seuls. Nous ne l'avons jamais été. Et les entités qui nous ont créés n'ont jamais vraiment quitté San Andreas.</p>
+<p>Fort Zancudo n'est pas une base militaire américaine. C'est une ambassade. Une interface entre deux civilisations — dont l'une ne sait pas qu'elle est la création de l'autre.</p>
+<div class="illustration-box">
+  <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-dark);letter-spacing:5px;">· ✦ · · ✦ ·</div>
+  <div class="caption">Nébuleuse Z-Alpha — système d'origine présumé des Annunakis, carte reconstituée</div>
+</div>
+<p>Les Annunakis ne sont pas partis. Ils se sont fondus. Certaines familles de Los Santos, celles dont la fortune est inexpliquée, dont les membres vivent anormalement longtemps, dont les enfants montrent des capacités cognitives hors-norme dès la naissance... font partie du programme.</p>
+</div>
+<div class="page-number left">96</div>`,
+
+    right: `<div class="page-chapter">Chapitre VIII</div>
+<div class="page-body">
+<p>Nous appelons ces individus les <em>Sanctifiés</em>. Ils ne savent pas qu'ils le sont pour la plupart. Leur ADN hybride se manifeste par des détails subtils : une résistance inhabituelle aux maladies, une intuition quasi-surnaturelle, des rêves récurrents de paysages qui ne correspondent à aucun endroit de Terre.</p>
+<div class="quote-block">"Je rêve depuis l'enfance d'une ville sous deux soleils. Une cité de cristal au bord d'un océan violet. Dans ce rêve, je comprends tout. Je sais tout. Et puis je me réveille à Strawberry."<br><span style="font-size:10px;font-style:normal;">— Témoin E, habitant de South LS</span></div>
+<p>J'estime qu'une fraction de la population porte en elle un ratio d'ADN suffisamment distinct pour déclencher ce que j'appelle le <em>Réveil</em>. Un éveil progressif à une mémoire plus ancienne que l'histoire telle que nous la connaissons.</p>
+</div>
+<div class="page-number right">97</div>`
+  },
+
+  // SPREAD 9 — conclusion
+  {
+    left: `<div class="page-chapter">Chapitre IX</div>
+<div class="page-title">Ce que Vous<br>Devez Faire</div>
+<div class="page-body">
+<p><span class="dropcap">V</span>ous avez lu jusqu'ici. C'est déjà beaucoup. La connaissance ne se désapprend pas et certaines questions, une fois posées, ne vous quittent plus.</p>
+<p>Ce livre n'est pas une fin. C'est une invitation à regarder différemment ce que l'on tient pour acquis.</p>
+<div class="ornament">◆ ◆ ◆</div>
+<p>Voici ce que je vous suggère :</p>
+<div style="font-family:'Cinzel',serif;font-size:10px;display:flex;flex-direction:column;gap:6px;">
+  <div>▸ Lisez les sources primaires, pas seulement les résumés</div>
+  <div>▸ Comparez les versions officielles aux archives disponibles</div>
+  <div>▸ Observez. Notez. Vérifiez par vous-même</div>
+  <div>▸ Gardez l'esprit ouvert, mais aussi l'esprit critique</div>
+</div>
+</div>
+<div class="page-number left">108</div>`,
+
+    right: `<div class="page-chapter">Épilogue</div>
+<div class="page-title">La Vérité<br>Ne Meurt Pas</div>
+<div class="page-body">
+<p>Ce livre est le fruit de vingt ans de travail solitaire. Il ne prétend pas clore le débat — il espère l'ouvrir.</p>
+<p>Si vous l'avez entre les mains, c'est peut-être parce que vous aussi, quelque chose vous a toujours semblé inexpliqué. Ce sentiment est légitime.</p>
+<div class="divider">✦</div>
+<p>Je ne vous demande pas de tout croire. Je vous demande de ne pas tout avaler non plus. Questionnez vos certitudes. Questionnez les sources. Questionnez même ce livre.</p>
+<div class="ornament">◆ ◆ ◆</div>
+<div style="text-align:center;margin-top:12px;">
+  <div style="font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--red-accent);">Collectif Vérité</div>
+  <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--gold-dark);letter-spacing:2px;margin-top:4px;">LOS SANTOS · SAN ANDREAS</div>
+  <div style="font-family:'Cinzel',serif;font-size:8px;color:#5a3810;margin-top:6px;font-style:italic;">"La vérité est la seule chose qui reste<br>quand tout le reste est brûlé."</div>
+</div>
+</div>
+<div class="page-number right">109</div>`
+  }
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let currentSpread = 0;
+let isOpen = false;
+let isAnimating = false;
+const TOTAL_SPREADS = spreads.length;
+
+const cover        = document.getElementById('cover-container');
+const flipContainer= document.getElementById('flip-container');
+const flipFront    = document.getElementById('flip-front-content');
+const flipBack     = document.getElementById('flip-back-content');
+const leftContent  = document.getElementById('left-content');
+const navPrev      = document.getElementById('nav-prev');
+const navNext      = document.getElementById('nav-next');
+const indicator    = document.getElementById('page-indicator');
+
+function renderSpread(index) {
+  const s = spreads[index];
+  leftContent.innerHTML = s.left;
+  flipFront.innerHTML   = s.right;
+  // preload next back face
+  if (index + 1 < TOTAL_SPREADS) {
+    flipBack.innerHTML = spreads[index + 1].left;
+  } else {
+    flipBack.innerHTML = `<div class="page-content"><div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:14px;">
+      <div style="font-size:40px;">✦</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold-dark);text-align:center;">Fin du Livre</div>
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:#8a6020;letter-spacing:2px;text-align:center;">Collectif Vérité · Los Santos</div>
+    </div></div>`;
+  }
+  updateNav();
+  updateIndicator();
+}
+
+function updateNav() {
+  navPrev.classList.toggle('hidden', currentSpread <= 0);
+  navNext.classList.toggle('hidden', currentSpread >= TOTAL_SPREADS - 1);
+}
+
+function updateIndicator() {
+  if (!isOpen) { indicator.style.display='none'; return; }
+  indicator.style.display='block';
+  indicator.textContent = `Pages ${currentSpread * 2 + 2}–${currentSpread * 2 + 3} / ${TOTAL_SPREADS * 2 + 1}`;
+}
+
+function openBook() {
+  if (isOpen || isAnimating) return;
+  isAnimating = true;
+  cover.classList.add('opening');
+  cover.querySelector('.cover-click-hint').style.display = 'none';
+  setTimeout(() => {
+    cover.classList.remove('opening');
+    cover.classList.add('opened');
+    cover.style.display = 'none';
+    isOpen = true;
+    isAnimating = false;
+    renderSpread(0);
+    navPrev.classList.add('hidden');
+    navNext.classList.remove('hidden');
+    indicator.style.display = 'block';
+    updateIndicator();
+  }, 1200);
+}
+
+function doFlip(direction) {
+  if (isAnimating) return;
+  if (direction === 'next' && currentSpread >= TOTAL_SPREADS - 1) return;
+  if (direction === 'prev' && currentSpread <= 0) return;
+
+  isAnimating = true;
+  flipContainer.style.transition = 'transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000)';
+
+  if (direction === 'next') {
+    // prepare back face with next spread's left page
+    flipBack.innerHTML = (currentSpread + 1 < TOTAL_SPREADS)
+      ? spreads[currentSpread + 1].left
+      : `<div class="page-content"><div style="display:flex;align-items:center;justify-content:center;height:100%;">
+          <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold-dark);">Fin</div>
+        </div></div>`;
+
+    flipContainer.style.transform = 'rotateY(-180deg)';
+
+    setTimeout(() => {
+      currentSpread++;
+      flipContainer.style.transition = 'none';
+      flipContainer.style.transform = 'rotateY(0deg)';
+      renderSpread(currentSpread);
+      isAnimating = false;
+    }, 920);
+
+  } else {
+    // flip backwards: show previous spread's right page from left
+    flipContainer.style.transform = 'rotateY(180deg)';
+
+    // prepare the reveal: back face should show prev right
+    flipBack.innerHTML = spreads[currentSpread - 1].right;
+
+    setTimeout(() => {
+      currentSpread--;
+      flipContainer.style.transition = 'none';
+      flipContainer.style.transform = 'rotateY(0deg)';
+      // after going back, left = prev left, right = prev right
+      leftContent.innerHTML = spreads[currentSpread].left;
+      flipFront.innerHTML   = spreads[currentSpread].right;
+      if (currentSpread + 1 < TOTAL_SPREADS)
+        flipBack.innerHTML = spreads[currentSpread + 1].left;
+      updateNav();
+      updateIndicator();
+      isAnimating = false;
+    }, 920);
+  }
+}
+
+function flipNext() { doFlip('next'); }
+function flipPrev() { doFlip('prev'); }
+
+cover.addEventListener('click', openBook);
+
+// keyboard support
+document.addEventListener('keydown', e => {
+  if (!isOpen) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') flipNext();
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   flipPrev();
+});
+
+// initial state: show right side empty
+flipFront.innerHTML = '';
+flipBack.innerHTML  = '';
+leftContent.innerHTML = '';
+</script>
+</body>
+</html>
