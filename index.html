@@ -147,6 +147,7 @@
     border-radius: 0 6px 6px 0;
     box-shadow: 6px 4px 20px rgba(0,0,0,0.5);
     overflow: hidden;
+    display: none;
   }
   /* edge lines illusion */
   #pages-stack::before {
@@ -168,6 +169,7 @@
     border-right: 1px solid #c8b880;
     overflow: hidden;
     box-shadow: inset -6px 0 12px rgba(0,0,0,0.07);
+    display: none;
   }
 
   /* ── FLIP CONTAINER (the actual turning page) ── */
@@ -366,7 +368,7 @@
     </div>
 
     <!-- PAGES STACK (right side visual) -->
-    <div id="pages-stack"></div>
+    <div id="pages-stack"><div id="pages-stack-content" class="page-content" style="background:var(--paper);"></div></div>
 
     <!-- FLIP CONTAINER -->
     <div id="flip-container">
@@ -719,7 +721,8 @@ function renderSpread(index) {
   const s = spreads[index];
   leftContent.innerHTML = s.left;
   flipFront.innerHTML   = s.right;
-  // preload next back face
+  document.getElementById('pages-stack-content').innerHTML =
+    (index + 1 < TOTAL_SPREADS) ? spreads[index + 1].right : '';
   if (index + 1 < TOTAL_SPREADS) {
     flipBack.innerHTML = spreads[index + 1].left;
   } else {
@@ -747,6 +750,8 @@ function updateIndicator() {
 function openBook() {
   if (isOpen || isAnimating) return;
   isAnimating = true;
+  document.getElementById('left-page').style.display   = 'block';
+  document.getElementById('pages-stack').style.display = 'block';
   cover.classList.add('opening');
   cover.querySelector('.cover-click-hint').style.display = 'none';
   setTimeout(() => {
@@ -790,19 +795,17 @@ function doFlip(direction) {
     }, 920);
 
   } else {
-    // flip backwards: show previous spread's right page from left
+    leftContent.innerHTML = spreads[currentSpread - 1].left;
+    flipBack.innerHTML    = spreads[currentSpread - 1].right;
+    document.getElementById('pages-stack-content').innerHTML = spreads[currentSpread - 1].right;
     flipContainer.style.transform = 'rotateY(180deg)';
-
-    // prepare the reveal: back face should show prev right
-    flipBack.innerHTML = spreads[currentSpread - 1].right;
-
     setTimeout(() => {
       currentSpread--;
       flipContainer.style.transition = 'none';
       flipContainer.style.transform = 'rotateY(0deg)';
-      // after going back, left = prev left, right = prev right
-      leftContent.innerHTML = spreads[currentSpread].left;
-      flipFront.innerHTML   = spreads[currentSpread].right;
+      flipFront.innerHTML = spreads[currentSpread].right;
+      document.getElementById('pages-stack-content').innerHTML =
+        (currentSpread + 1 < TOTAL_SPREADS) ? spreads[currentSpread + 1].right : '';
       if (currentSpread + 1 < TOTAL_SPREADS)
         flipBack.innerHTML = spreads[currentSpread + 1].left;
       updateNav();
