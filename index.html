@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -814,13 +814,26 @@ function doFlip(direction) {
     }, 920);
 
   } else {
+    document.getElementById('pages-stack-content').innerHTML = spreads[currentSpread].right;
     leftContent.innerHTML = spreads[currentSpread - 1].left;
+    flipFront.innerHTML   = spreads[currentSpread].left;
     flipBack.innerHTML    = spreads[currentSpread - 1].right;
-    document.getElementById('pages-stack-content').innerHTML = spreads[currentSpread - 1].right;
-    flipContainer.style.transform = 'rotateY(180deg)';
+    flipContainer.style.transition = 'none';
+    flipContainer.style.left = 'auto';
+    flipContainer.style.right = '50%';
+    flipContainer.style.transformOrigin = 'right center';
+    flipContainer.style.transform = 'rotateY(0deg)';
+    void flipContainer.offsetWidth;
+    flipContainer.style.transition = 'transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000)';
+    requestAnimationFrame(() => {
+      flipContainer.style.transform = 'rotateY(180deg)';
+    });
     setTimeout(() => {
       currentSpread--;
       flipContainer.style.transition = 'none';
+      flipContainer.style.left = '50%';
+      flipContainer.style.right = 'auto';
+      flipContainer.style.transformOrigin = 'left center';
       flipContainer.style.transform = 'rotateY(0deg)';
       flipFront.innerHTML = spreads[currentSpread].right;
       document.getElementById('pages-stack-content').innerHTML =
